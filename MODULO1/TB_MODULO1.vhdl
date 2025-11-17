@@ -7,7 +7,6 @@ end entity;
 
 architecture sim of tb_seguridad is
 
-    -- Señales para conectar con el módulo DUT
     signal clk100     : std_logic := '0';
     signal rst        : std_logic := '0';
     signal btn_config : std_logic := '0';
@@ -22,7 +21,7 @@ architecture sim of tb_seguridad is
 begin
 
     --------------------------------------------------------------------
-    -- Instanciación del módulo a probar (DUT)
+    -- Instancia del módulo DUT
     --------------------------------------------------------------------
     DUT: entity work.seguridad_autenticacion
     port map (
@@ -38,7 +37,7 @@ begin
     );
 
     --------------------------------------------------------------------
-    -- Generador de reloj (100 MHz → periodo 10 ns)
+    -- Reloj 100 MHz
     --------------------------------------------------------------------
     clk_process : process
     begin
@@ -49,90 +48,76 @@ begin
     end process;
 
     --------------------------------------------------------------------
-    -- Procedimiento para simular presionar el botón ENTER
-    --------------------------------------------------------------------
-    procedure pulse_enter is
-    begin
-        btn_enter <= '1';
-        wait for 20 ns;
-        btn_enter <= '0';
-        wait for 20 ns;
-    end procedure;
-
-    --------------------------------------------------------------------
-    -- Procedimiento para presionar el botón CONFIG
-    --------------------------------------------------------------------
-    procedure pulse_config is
-    begin
-        btn_config <= '1';
-        wait for 20 ns;
-        btn_config <= '0';
-        wait for 20 ns;
-    end procedure;
-
-    --------------------------------------------------------------------
-    -- Estímulos principales
+    -- ESTÍMULOS (SIN PROCEDURES)
     --------------------------------------------------------------------
     stim_proc : process
     begin
 
-        ------------------------------------------------------------
-        -- 1. RESET
-        ------------------------------------------------------------
+        --------------------------------------------------------
+        -- RESET
+        --------------------------------------------------------
         rst <= '1';
         wait for 100 ns;
         rst <= '0';
         wait for 100 ns;
 
-        ------------------------------------------------------------
-        -- 2. CONFIGURAR LA CLAVE (por ejemplo 1010)
-        ------------------------------------------------------------
-        sw <= "1010";   -- Clave que deseamos guardar
-        pulse_enter;    -- Guardar clave
+        --------------------------------------------------------
+        -- CONFIGURAR CLAVE 1010
+        --------------------------------------------------------
+        sw <= "1010";
+        btn_enter <= '1';
+        wait for 20 ns;
+        btn_enter <= '0';
         wait for 200 ns;
 
-        ------------------------------------------------------------
-        -- 3. INGRESAR CLAVE INCORRECTA
-        ------------------------------------------------------------
-        sw <= "0001";   -- Incorrecta
-        pulse_enter;
+        --------------------------------------------------------
+        -- INTENTO INCORRECTO 1
+        --------------------------------------------------------
+        sw <= "0001";
+        btn_enter <= '1';
+        wait for 20 ns;
+        btn_enter <= '0';
         wait for 200 ns;
 
-        sw <= "0101";   -- Incorrecta
-        pulse_enter;
+        --------------------------------------------------------
+        -- INTENTO INCORRECTO 2
+        --------------------------------------------------------
+        sw <= "0011";
+        btn_enter <= '1';
+        wait for 20 ns;
+        btn_enter <= '0';
         wait for 200 ns;
 
-        ------------------------------------------------------------
-        -- 4. TERCER INTENTO INCORRECTO → debe activar el BLOQUEO
-        ------------------------------------------------------------
-        sw <= "1111";   -- Incorrecta
-        pulse_enter;
-        wait for 500 ns;
+        --------------------------------------------------------
+        -- INTENTO INCORRECTO 3 → LOCK
+        --------------------------------------------------------
+        sw <= "1111";
+        btn_enter <= '1';
+        wait for 20 ns;
+        btn_enter <= '0';
 
-        ------------------------------------------------------------
-        -- *** IMPORTANTE PARA SIMULACIÓN ***
-        -- Reducimos lock_count manualmente (simulación rápida)
-        ------------------------------------------------------------
-        report "Simulación: Forzando lock_count a 1";
-        wait for 100 ns;
+        --------------------------------------------------------
+        -- ESPERAR A QUE TERMINE EL BLOQUEO
+        -- (tu versión de simulación debe tener contadores pequeños)
+        --------------------------------------------------------
+        wait for 5 ms;
 
-        ------------------------------------------------------------
-        -- 5. ESPERAR A QUE FINALICE EL BLOQUEO
-        ------------------------------------------------------------
+        --------------------------------------------------------
+        -- CLAVE CORRECTA
+        --------------------------------------------------------
+        sw <= "1010";
+        btn_enter <= '1';
+        wait for 20 ns;
+        btn_enter <= '0';
         wait for 200 ns;
 
-        ------------------------------------------------------------
-        -- 6. INGRESAR CLAVE CORRECTA DESPUÉS DEL BLOQUEO
-        ------------------------------------------------------------
-        sw <= "1010";   -- Clave correcta
-        pulse_enter;
-        wait for 200 ns;
-
-        ------------------------------------------------------------
-        -- Fin de simulación
-        ------------------------------------------------------------
-        report "Fin del testbench." severity note;
+        --------------------------------------------------------
+        -- FIN
+        --------------------------------------------------------
+        report "Fin de simulación" severity note;
         wait;
+
     end process;
 
 end architecture;
+
