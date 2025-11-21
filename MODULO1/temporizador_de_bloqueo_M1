@@ -1,0 +1,40 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
+
+entity temporizador_de_bloqueo_M1 is
+    port(
+        clk_1hz : in std_logic;      -- pulso 1 Hz
+        rst     : in std_logic;
+        start   : in std_logic;      -- iniciar bloqueo (carga 30)
+        active  : out std_logic;     -- '1' mientras está contando
+        value   : out integer range 0 to 30  -- valor actual del contador
+    );
+end entity;
+
+architecture Behavioral of temporizador_de_bloqueo_M1 is
+    signal cnt : integer range 0 to 30 := 30;
+    signal running : std_logic := '0';
+begin
+    process(clk_1hz)
+    begin
+        if rising_edge(clk_1hz) then
+            if rst = '1' then
+                cnt <= 30;
+                running <= '0';
+            elsif start = '1' then
+                cnt <= 30;
+                running <= '1';
+            elsif running = '1' then
+                if cnt > 0 then
+                    cnt <= cnt - 1;
+                else
+                    running <= '0';
+                end if;
+            end if;
+        end if;
+    end process;
+
+    active <= running;
+    value <= cnt;
+end Behavioral;
