@@ -1,0 +1,110 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+
+entity tb_contador_de_intentos_M1 is
+end tb_contador_de_intentos_M1;
+
+architecture behavior of tb_contador_de_intentos_M1 is
+
+    -- Componente a probar (DUT)
+    component mod_attempts
+        port(
+            clk      : in  std_logic;
+            rst      : in  std_logic;
+            fail     : in  std_logic;
+            reset_at : in  std_logic;
+            attempts : out integer range 0 to 3;
+            bloqueo    : out std_logic
+        );
+    end component;
+
+    -- Señales del testbench
+    signal clk_tb      : std_logic := '0';
+    signal rst_tb      : std_logic := '0';
+    signal fail_tb     : std_logic := '0';
+    signal reset_at_tb : std_logic := '0';
+    signal attempts_tb : integer range 0 to 3;
+    signal block_tb    : std_logic;
+
+begin
+
+    -------------------------------------------------------------------
+    -- Instancia del DUT
+    -------------------------------------------------------------------
+    uut: mod_attempts
+        port map(
+            clk      => clk_tb,
+            rst      => rst_tb,
+            fail     => fail_tb,
+            reset_at => reset_at_tb,
+            attempts => attempts_tb,
+            bloqueo    => block_tb
+        );
+
+    -------------------------------------------------------------------
+    -- Generación del reloj (10 ns → 100 MHz)
+    -------------------------------------------------------------------
+    clk_process : process
+    begin
+        clk_tb <= '0';
+        wait for 5 ns;
+        clk_tb <= '1';
+        wait for 5 ns;
+    end process;
+
+    -------------------------------------------------------------------
+    -- Estímulos
+    -------------------------------------------------------------------
+    stim_proc : process
+    begin
+
+        -------------------------------------------------------------------
+        -- 1) Reset inicial
+        -------------------------------------------------------------------
+        rst_tb <= '1';
+        wait for 20 ns;
+        rst_tb <= '0';
+        wait for 20 ns;
+
+        -- attempts debería ser 3
+
+        -------------------------------------------------------------------
+        -- 2) Un fallo → cnt = 2
+        -------------------------------------------------------------------
+        fail_tb <= '1';
+        wait for 10 ns;
+        fail_tb <= '0';
+        wait for 20 ns;
+
+        -------------------------------------------------------------------
+        -- 3) Segundo fallo → cnt = 1
+        -------------------------------------------------------------------
+        fail_tb <= '1';
+        wait for 10 ns;
+        fail_tb <= '0';
+        wait for 20 ns;
+
+        -------------------------------------------------------------------
+        -- 4) Tercer fallo → cnt = 0 (block = '1')
+        -------------------------------------------------------------------
+        fail_tb <= '1';
+        wait for 10 ns;
+        fail_tb <= '0';
+        wait for 20 ns;
+
+        -------------------------------------------------------------------
+        -- 5) Aplicar reset_at (resetea a 3)
+        -------------------------------------------------------------------
+        reset_at_tb <= '1';
+        wait for 10 ns;
+        reset_at_tb <= '0';
+        wait for 20 ns;
+
+        -------------------------------------------------------------------
+        -- Final
+        -------------------------------------------------------------------
+        wait;
+
+    end process;
+
+end behavior;
