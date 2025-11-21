@@ -1,0 +1,31 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+
+entity contador_de_intentos_M1 is
+    port(
+        clk      : in  std_logic;
+        rst      : in  std_logic;
+        fail     : in  std_logic;                -- fallo detectado
+        reset_at : in  std_logic;                -- reset por clave correcta o timeout
+        attempts : out integer range 0 to 3;
+        bloqueo    : out std_logic                 -- activar bloqueo
+    );
+end entity;
+
+architecture Behavioral of contador_de_intentos_M1 is
+    signal cnt : integer range 0 to 3 := 3;
+begin
+    process(clk)
+    begin
+        if rising_edge(clk) then
+            if rst = '1' or reset_at = '1' then
+                cnt <= 3;
+            elsif fail = '1' and cnt > 0 then
+                cnt <= cnt - 1;
+            end if;
+        end if;
+    end process;
+
+    bloqueo <= '1' when cnt = 0 else '0';
+    attempts <= cnt;
+end Behavioral;
