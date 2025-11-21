@@ -1,7 +1,7 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
-entity almacenamient_de_clave_M1 is
+entity almacenamiento_de_clave_M1 is
     port(
         clk      : in  std_logic;
         rst      : in  std_logic;
@@ -11,7 +11,7 @@ entity almacenamient_de_clave_M1 is
     );
 end entity;
 
-architecture Behavioral of almacenamient_de_clave_M1 is
+architecture Behavioral of almacenamiento_de_clave_M1 is
     signal key_reg : std_logic_vector(3 downto 0) := (others=>'0');
 begin
     process(clk)
