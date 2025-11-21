@@ -1,0 +1,114 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
+
+entity tb_temporizador_de_bloqueo_M1 is
+end entity;
+
+architecture behavior of tb_temporizador_de_bloqueo_M1 is
+
+    -- Componente bajo prueba (DUT)
+    component temporizador_de_bloqueo_M1
+        port(
+            clk_1hz : in std_logic;
+            rst     : in std_logic;
+            start   : in std_logic;
+            active  : out std_logic;
+            value   : out integer range 0 to 30
+        );
+    end component;
+
+    -- Señales del testbench
+    signal clk_1hz_tb : std_logic := '0';
+    signal rst_tb     : std_logic := '0';
+    signal start_tb   : std_logic := '0';
+    signal active_tb  : std_logic;
+    signal value_tb   : integer range 0 to 30;
+
+    -- Constante para el periodo de reloj
+    constant CLK_PERIOD : time := 10 ns;
+
+begin
+
+    -------------------------------------------------------------------
+    -- Instanciación del DUT
+    -------------------------------------------------------------------
+    uut: temporizador_de_bloqueo_M1
+        port map(
+            clk_1hz => clk_1hz_tb,
+            rst     => rst_tb,
+            start   => start_tb,
+            active  => active_tb,
+            value   => value_tb
+        );
+
+    -------------------------------------------------------------------
+    -- Generación de reloj (mejorado)
+    -------------------------------------------------------------------
+    clk_process : process
+    begin
+        while true loop
+            clk_1hz_tb <= '0';
+            wait for CLK_PERIOD/2;
+            clk_1hz_tb <= '1';
+            wait for CLK_PERIOD/2;
+        end loop;
+    end process;
+
+    -------------------------------------------------------------------
+    -- Estímulos (mejorado)
+    -------------------------------------------------------------------
+    stim_proc : process
+    begin
+        report "Iniciando simulacion..." severity note;
+        
+        -------------------------------------------------------------------
+        -- 1) Reset inicial
+        -------------------------------------------------------------------
+        rst_tb <= '1';
+        wait for 20 ns;
+        rst_tb <= '0';
+        wait for 20 ns;
+
+        report "Reset completado" severity note;
+
+        -------------------------------------------------------------------
+        -- 2) Enviar start para iniciar timer
+        -------------------------------------------------------------------
+        start_tb <= '1';
+        wait for 10 ns;
+        start_tb <= '0';
+        
+        report "Start enviado, contador deberia iniciar" severity note;
+        wait for 100 ns;
+
+        -------------------------------------------------------------------
+        -- 3) Verificar funcionamiento
+        -------------------------------------------------------------------
+        assert active_tb = '1' report "Error: active deberia ser '1'" severity error;
+        
+        wait for 200 ns;
+
+        -------------------------------------------------------------------
+        -- 4) Segundo start
+        -------------------------------------------------------------------
+        start_tb <= '1';
+        wait for 10 ns;
+        start_tb <= '0';
+
+        report "Segundo start enviado" severity note;
+        wait for 200 ns;
+
+        -------------------------------------------------------------------
+        -- 5) Finalizar simulación correctamente
+        -------------------------------------------------------------------
+        report "Simulacion completada correctamente" severity note;
+        wait for 100 ns;
+        
+        -- Fin de simulación
+        assert false report "Fin de la simulacion" severity failure;
+        
+        wait;
+    end process;
+
+end architecture;
